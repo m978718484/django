@@ -16,10 +16,15 @@ def doJob(urls,name):
 	browser = webdriver.PhantomJS(executable_path=r'D:\TestProject\phantomjs\bin\phantomjs.exe',service_args=service_args)
 	wr = open('done/'+name+'.txt','w')
 	for url in urls:
+		print 'Name:%s\tUrl:%s'%(name,url)
 		browser.get(url)
-		time.sleep(1)
+		time.sleep(random.randint(1,3)*1)
 		soup = BeautifulSoup(browser.page_source.encode('utf-8'))
 		findNames = soup.findAll('div',attrs={'class':'name'})
+		if not findNames:
+			print '.......'
+			time.sleep(60)
+			
 		for sub in findNames:
 			n = sub.a.string.encode('utf8') if sub.a.string is not None else ''
 			pl = sub.span.string.encode('utf8') if sub.span.string is not None else ''
