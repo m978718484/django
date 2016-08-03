@@ -16,11 +16,13 @@ import redis
 base = 'https://www.douban.com'
 base_url = 'https://www.douban.com/group/explore/'
 groups = ['culture','ent','fashion','life','tech','travel']
-myredis = redis.Redis(host='192.168.56.102',port=6379,db=15)
+myredis = redis.Redis(host='192.168.211.128',port=6379,db=15)
 
 def get_browser():
-    service_args = ['--proxy=10.191.131.48:3128',
-	    '--proxy-auth=F3220575:weiqian123!',]
+    service_args = [
+        '--proxy=10.137.66.85:3128',
+	    '--proxy-auth=H2602881:password',
+        ]
     return webdriver.PhantomJS(executable_path=r'.\phantomjs\bin\phantomjs.exe',service_args=service_args)
 
 def install_to_redis(key,value):
@@ -51,7 +53,10 @@ def get_group_explore_group(get_key,set_key):
     url = myredis.hmget(get_key,'url')[0]
     total_pages = int(myredis.hmget(get_key,'total_pages')[0])
     pages = ['%s/?start=%s' % (url,page*30) for page in xrange(0,total_pages)]
-    gevent.joinall([gevent.spawn(dojob,u,get_key,set_key) for u in pages])
+    for urls in [pages[i:i+5] for i in xrange(0,len(pages),5)]:
+        gevent.joinall([gevent.spawn(dojob,u,get_key,set_key) for u in urls])
+
+    #gevent.joinall([gevent.spawn(dojob,u,get_key,set_key) for u in pages])
         #print '%s/?start=%s' % (url,page)
         #soup = get_page('%s/?start=%s' % (url,page))
         #page += 30
@@ -62,8 +67,5 @@ def get_group_explore_group(get_key,set_key):
         #    install_to_redis(set_key,{href.replace(base,''):group_name})
         #time.sleep(1)
 
-#gevent.joinall([gevent.spawn(get_group_explore,'%s%s' % (base_url,group),'group:%s' % group) for group in groups])
-get_group_explore_group('group:culture','group_name:culture')
-
-
-
+gevent.joinall([gevent.spawn(get_group_explore,'%s%s' % (base_url,group),'group:%s' % group) for group in groups])
+gevent.joinall([gevent.spawn(get_group_explore_group,'group:%s' % group,'group_name:%s' % group) for group in groups])
