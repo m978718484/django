@@ -56,16 +56,25 @@ def get_group_explore_group(get_key,set_key):
     for urls in [pages[i:i+5] for i in xrange(0,len(pages),5)]:
         gevent.joinall([gevent.spawn(dojob,u,get_key,set_key) for u in urls])
 
-    #gevent.joinall([gevent.spawn(dojob,u,get_key,set_key) for u in pages])
-        #print '%s/?start=%s' % (url,page)
-        #soup = get_page('%s/?start=%s' % (url,page))
-        #page += 30
-        #total_pages -= 1
-        #for sub in soup.findAll('span',attrs = {'class':'from'}):
-        #    group_name = sub.a.string
-        #    href = sub.a['href']
-        #    install_to_redis(set_key,{href.replace(base,''):group_name})
-        #time.sleep(1)
 
-gevent.joinall([gevent.spawn(get_group_explore,'%s%s' % (base_url,group),'group:%s' % group) for group in groups])
-gevent.joinall([gevent.spawn(get_group_explore_group,'group:%s' % group,'group_name:%s' % group) for group in groups])
+#def dojob_group(url,set_key):
+
+def get_group_members(get_key):
+    for group_name in myredis.hgetall(get_key):
+        url = '%s%smembers' % (base,group_name)
+        soup = get_page(url)
+        for page in soup.findAll('span',attrs={'class':'thispage'}):
+            total_pages = int(page['data-total-page'])
+            pages = ['%s/?start=%s' % (url,page * 35) for page in xrange(0,total_pages)]
+            for urls in [pages[i:i + 5] for i in xrange(0,len(pages),5)]:
+                print urls
+                #print get_key,int(page['data-total-page'])
+            #install_to_redis(key,{'url':url,'total_pages':int(page['data-total-page'])})
+
+#gevent.joinall([gevent.spawn(get_group_explore,'%s%s' %
+#(base_url,group),'group:%s' % group) for group in groups])
+#gevent.joinall([gevent.spawn(get_group_explore_group,'group:%s' %
+#group,'group_name:%s' % group) for group in groups])
+import datetime
+get_group_members('group_name:culture')
+print datetime.datetime.now()
